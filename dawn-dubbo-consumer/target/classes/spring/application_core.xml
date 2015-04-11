@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  
+           http://www.springframework.org/schema/beans/spring-beans.xsd  
+           http://www.springframework.org/schema/tx  
+           http://www.springframework.org/schema/tx/spring-tx.xsd  
+           http://www.springframework.org/schema/context  
+           http://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- 采用注释的方式配置bean -->
+	<context:annotation-config />
+	<!-- 配置要扫描的包 -->
+	<context:component-scan base-package="com.dawn" />
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:config.properties</value>
+				<value>classpath:jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 队列中的最小等待数 -->
+		<property name="minIdle" value="${jdbc.minIdle}"></property>
+		<!-- 队列中的最大等待数 -->
+		<property name="maxIdle" value="${jdbc.maxIdle}"></property>
+		<!-- 最长等待时间，单位毫秒 -->
+		<property name="maxWait" value="${jdbc.maxWait}"></property>
+		<!-- 最大活跃数 -->
+		<property name="maxActive" value="${jdbc.maxActive}"></property>
+		<property name="initialSize" value="${jdbc.initialSize}"></property>
+	</bean>
+	
+	<!-- 配置mybitasSqlSessionFactoryBean -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:sql-map-config.xml"></property>
+		 <!-- mapper和resultmap配置路径 -->
+		<property name="mapperLocations">
+			<list>
+                <!-- 表示在com.hoo目录下的任意包下的resultmap包目录中，以-resultmap.xml或-mapper.xml结尾所有文件 -->
+				<value>classpath*:maps/**/*.xml</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.tianque.sms.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+	<!-- 事务配置 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- 使用annotation注解方式配置事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	
+</beans>
